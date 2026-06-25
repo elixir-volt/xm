@@ -45,27 +45,52 @@ defmodule XMTest do
     assert XM.render(entry) =~ ~s(<content type="html">)
   end
 
-  test "supports dynamic tags and iodata rendering" do
+  test "supports dynamic tags, namespace helpers, and iodata rendering" do
     [node] =
       tree do
-        tag("media:thumbnail", url: "https://example.com/image.png")
+        tag(XM.qname(:media, :thumbnail), [
+          XM.xmlns(:media, "https://example.com/media"),
+          url: "https://example.com/image.png"
+        ])
       end
 
-    assert node == {"media:thumbnail", [{"url", "https://example.com/image.png"}], []}
+    assert node == {
+             "media:thumbnail",
+             [
+               {"xmlns:media", "https://example.com/media"},
+               {"url", "https://example.com/image.png"}
+             ],
+             []
+           }
+
     assert node |> XM.render_iodata() |> IO.iodata_to_binary() =~ "<media:thumbnail"
   end
 
   test "raises clear errors for invalid documents" do
-    assert_raise ArgumentError, ~r/requires a root element/, fn ->
+    assert_raise XM.Error, ~r/requires a root element/, fn ->
       XM.render([])
     end
 
-    assert_raise ArgumentError, ~r/exactly one root element/, fn ->
+    assert_raise XM.Error, ~r/exactly one root element/, fn ->
       tree do
         one()
         two()
       end
       |> XM.render()
+    end
+  end
+
+  test "raises idiomatic XM errors for invalid names, attributes, and text" do
+    assert_raise XM.Error, ~r/invalid XML name/, fn ->
+      XM.element("bad name")
+    end
+
+    assert_raise XM.Error, ~r/XML attributes must be/, fn ->
+      XM.element(:item, [:not_a_pair])
+    end
+
+    assert_raise XM.Error, ~r/cannot convert/, fn ->
+      XM.text(%{not: :stringable})
     end
   end
 
