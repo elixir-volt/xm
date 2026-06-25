@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.0 - 2026-06-25
+
 - Added namespace helpers with `qname/2`, `xmlns/1`, and `xmlns/2`.
 - Added declarative `schema do ... end` metadata for root namespace and XSD location rendering.
 - Added dotted namespace calls such as `image.image do ... end` for declared schema prefixes.
